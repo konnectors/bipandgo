@@ -16,7 +16,7 @@ script:
   - yarn build
 deploy:
   # publish dev versions
-tr  - provider: script
+  - provider: script
     repo: konnectors/bipandgo
     skip-cleanup: true
     script: DEPLOY_BRANCH=build && yarn deploy && yarn cozyPublish
