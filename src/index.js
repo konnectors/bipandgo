@@ -65,7 +65,6 @@ async function parsePage($) {
     },
     'table.order_listbox-table tbody tr'
   )
-  // TODO av chris , non retour d'une promesse
   bills = await preFetchAndFilter(bills)
   return bills.map(bill => {
     const filename =
