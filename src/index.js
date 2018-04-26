@@ -9,7 +9,7 @@ const {
 } = require('cozy-konnector-libs')
 const request = requestFactory({
   cheerio: true,
-//  debug: true,
+  //  debug: true,
   jar: true
 })
 const moment = require('moment')
@@ -23,58 +23,70 @@ module.exports = new BaseKonnector(start)
 async function start(fields) {
   await login(fields)
   const bills = await getBillsList()
-  saveBills(bills,
-            fields,
-            {
-              identifiers: ['bipandgo'],
-              contentType: 'application/pdf'
-            })
+  saveBills(bills, fields, {
+    identifiers: ['bipandgo'],
+    contentType: 'application/pdf'
+  })
 }
 
-function parsePage($) {
-  const bills = scrape($,
-               {
-                 billDate: {
-                   sel: 'td:nth-child(1)',
-                   parse: str => moment(str, 'L')
-                 },
-                 date: {
-                   sel: 'td:nth-child(2)',
-                   parse: str => moment(str, 'L').toDate()
-                 },
-                 billId: {
-                   sel: 'td:nth-child(3)'
-                 },
-                 amount: {
-                   sel: 'td:nth-child(4)',
-                   parse: str => parseFloat(str.replace(',','.'))
-                 },
-                 amountString: {
-                   sel: 'td:nth-child(4)',
-                   parse: str => `${str}€`
-                 },
-                 fileurl: {
-                   sel: 'td:nth-child(5) a',
-                   attr: 'href',
-                   parse: href => `${accountUrl}/operation-My.Account/${href}`
-                 }
-
-               },
-               'table.order_listbox-table tbody tr'
-                )
+async function parsePage($) {
+  let bills = scrape(
+    $,
+    {
+      billDate: {
+        sel: 'td:nth-child(1)',
+        parse: str => moment(str, 'L')
+      },
+      date: {
+        sel: 'td:nth-child(2)',
+        parse: str => moment(str, 'L').toDate()
+      },
+      billId: {
+        sel: 'td:nth-child(3)'
+      },
+      amount: {
+        sel: 'td:nth-child(4)',
+        parse: str => parseFloat(str.replace(',', '.'))
+      },
+      amountString: {
+        sel: 'td:nth-child(4)',
+        parse: str => `${str}€`
+      },
+      fileurl: {
+        sel: 'td:nth-child(5) a',
+        attr: 'href',
+        parse: href => `${accountUrl}/operation-My.Account/${href}`
+      }
+    },
+    'table.order_listbox-table tbody tr'
+  )
+  bills = await preFetchAndFilter(bills)
+  console.log(bills)
   return bills.map(bill => {
+    const filename =
+      `${bill['billDate'].format('YYYY-MM-DD')}` +
+      `_${bill['amountString']}_${bill['billId']}.pdf`
+    delete bill.billDate
+    delete bill.amountString
     return {
-        ...bill,
+      ...bill,
       vendor: 'bipandgo',
       currency: '€',
-      filename: `${bill['billDate'].format('YYYY-MM-DD')}` +
-        `_${bill['amountString']}_${bill['billId']}.pdf`
-      delete bill.billDate
-      delete bill.amountString
+      filename: filename
     }
   })
 }
 
+async function preFetchAndFilter(bills) {
+  let billsNew = []
+  bills.forEach(bill => {
+    console.log('test')
+    console.log(bill)
+    console.log(bill.amount)
+    billsNew.push(bill)
+  })
+  return billsNew
+}
 
 async function getPage(pageId) {
   log('info', `Fetching page ${pageId}`)
@@ -83,13 +95,15 @@ async function getPage(pageId) {
     url: `${accountUrl}/operation-My.Account`,
     formData: {
       // Mandatory for page change
-      'order_listbox_list_selection_name': 'WebSection_viewAccountInformation_order_listbox_selection',
-      'order_listbox_uid:list': '0',  // dummy value
+      order_listbox_list_selection_name:
+        'WebSection_viewAccountInformation_order_listbox_selection',
+      'order_listbox_uid:list': '0', // dummy value
       'listbox_nextPage:method': 'order_listbox',
-      'order_listbox_page_start': `${pageId - 1 }`,
+      order_listbox_page_start: `${pageId - 1}`,
       // Mandatory for viewing bills tab in html
-      'form_id': 'WebSection_viewAccountInformation',
-      'list_selection_name': 'WebSection_viewAccountInformation_account_listbox_selection',
+      form_id: 'WebSection_viewAccountInformation',
+      list_selection_name:
+        'WebSection_viewAccountInformation_account_listbox_selection',
       'service_listbox_uid:list': ''
     }
   })
@@ -114,8 +128,7 @@ async function getBillsList() {
     if ($ != null) {
       bills = bills.concat(parsePage($))
       page = page + 1
-    }
-    else {
+    } else {
       again = false
       continue
     }
@@ -123,15 +136,18 @@ async function getBillsList() {
   return bills
 }
 
-//TODO Redondance await
-//TODO ERROrs
 async function login(fields) {
   await signin({
     url: `${baseUrl}/login_form`,
     formSelector: '.main_form',
     formData: {
       __ac_name: fields.login,
-      __ac_password: fields.password },
-    validate: (statusCode, $) => statusCode === 200
+      __ac_password: fields.password
+    }
+  })
+  // Make a check, because resp to signin is identical(except SERVERID cookie)
+  await request(accountUrl).catch(err => {
+    if (err.statusCode === 401) throw new Error(errors.LOGIN_FAILED)
+    else throw err
   })
 }
