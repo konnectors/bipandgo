@@ -1,13 +1,13 @@
 {
   "version": "1.0.0",
-  "name": "Connector template",
+  "name": "Connector bipandgo",
   "type": "konnector",
   "language": "node",
   "icon": "icon.png",
-  "slug": "template",
-  "source": "git://github.com/konnectors/cozy-konnector-template.git",
+  "slug": "bipandgo",
+  "source": "git://github.com/konnectors/bipandgo.git",
   "editor": "Cozy",
-  "vendor_link": "Link to the target website",
+  "vendor_link": "https://www.bipandgo.com",
   "categories": ["other"],
   "fields": {
     "advancedFields": {
@@ -20,10 +20,13 @@
   "data_types": [
     "bill"
   ],
-  "screenshots": [ "screenshots/screenshot1.png" ],
+  "screenshots": [],
   "permissions": {
-    "books": {
-      "type": "io.cozy.books"
+    "bank operations": {
+      "type": "io.cozy.bank.operations"
+    },
+    "bills": {
+      "type": "io.cozy.bills"
     },
     "files": {
       "type": "io.cozy.files"
@@ -40,11 +43,11 @@
   "langs": ["fr", "en"],
   "locales": {
     "fr": {
-      "short_description": "Template de connecteur",
-      "long_description": "Ce template récupère une liste de livres sur un site de scraping",
+      "short_description": "Connecteur Bipandgo",
+      "long_description": "Ce connecteur récupère les factures des télépéages BipandGo",
       "permissions": {
-        "books": {
-          "description": "Utilisé pour sauvegarder les références des livres"
+        "bills": {
+          "description": "Utilisé pour sauver les données des factures"
         },
         "files": {
           "description": "Utilisé pour sauvegarder les factures"
@@ -55,11 +58,11 @@
       }
     },
     "en": {
-      "short_description": "Connector template",
-      "long_description": "This template fetches a list of books from a scraping website",
+      "short_description": "Connector Bipandgo",
+      "long_description": "This connector fetches bills form Bipandgo toll system",
       "permissions": {
-        "books": {
-          "description": "Required to save books references"
+        "bank operations": {
+          "description": "Required to link bank operations to bills"
         },
         "files": {
           "description": "Required to save the bills"
