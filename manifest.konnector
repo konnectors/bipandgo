@@ -10,6 +10,12 @@
   "vendor_link": "https://www.bipandgo.com",
   "categories": ["other"],
   "fields": {
+    "login": {
+      "type": "email"
+    },
+    "password": {
+      "type": "password"
+    },
     "advancedFields": {
       "folderPath": {
         "advanced": true,
