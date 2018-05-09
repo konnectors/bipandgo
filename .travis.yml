@@ -1,38 +1,32 @@
 language: node_js
 node_js:
-  - '8'
+- '8'
 env:
   global:
-    # Cozy-bot TOKEN
-    - secure: "GkQtfqpxsEQiZIZ4vuD6eLxtzLRXHH9iyM3f1ca6sC+ojn6eQ3z3G8Ux8/+EZ2nMElb2MpwKE7ioGj2BwS+D4Qc2PtG8UtTltoId3dHGa3RgdWUYMiToxwtYv8SXupEtQ7rdD5QysmDC1NeEZdtrYphmd9rQ9O1Qg2sO6IB63+OrLfHoxZsO0QmghBpZ1Jt5UxAEMr8pftKCieXw39zTKBjcq+gBnGlymTbYrJJi/NB3bQXcDir6Km+HqbaqidL08mNp8rbzs0PFhL3L+Skuply9NpYUvh+L1eLf8/eKbuJR0+yhRotRqtaaKvAT7c+GoEKceL6MxJ37+nKbqTEfIDJhwzmx88wRR0hSimP8ZPaPHar/3HFNiLLrACx4P1R+1iJdbuowpxTtP9TMgiHWDo9hPXC/789k5FYt9Oa2VbcEiule7l6narUVan8GSIHWTUM7spKEHvOYSaGMJj91/xb7T/XUS+d3NfEgvZP5oRnGjUMmOaFNO2nabEeuUJXJQ5M18Iwid9256SUfYc/7aX9rcaqiKOiU1+7AGZ7eIYpJU1Zf3Cqr0buVoDVR5bi44rOJbLcKrco+RrRhuOAXfFkJHut9SrYp3+xFQ/xXSlXP2MEPMXXG8EqbeQGnpCZYk9NFWdPHzFGU8OBv9hlQ3FanwAYqWyh7CnndCvzxX00="
-    # Cozy REGISTRY_TOKEN
-    - secure: "DhmpyiSRp+o3V6jhEuZHVCHmgRs2v6Nu5XVF56PWdE33Eui28Fa+kj3FmX3q9bPSDc0mmKk9sz3PicIgSoVYm3zCM/TIvb5RqMYN4IMn3l78rYtPksrS3bc2cnDgmn3ufxfbpMYsvIjKBn+PhRlWmy+io9e4H2pjlKlqiw5ZBZPSaOMg9MDpg0buOt55dYB4vYMn2qo18r4QGUbDAdMjQBiDx9c0Up5q9F+F7OUQTh/JD1MWpQmSfGq+w0InUmAP7kRRRr8SjLVWL4s0P54v57VfVlDIGGA7HJ2sJsHcT9lRwMIuW3yYZGOolgwOwMCTH091w0xLvt2fkPDnrNhpQllUlh7K3AlqCtb2D3V10Zva1YMVtaSxIKXE79cdI5simRJPgico+bL1RCzgDTUiF776KfKPPNxtqMiRvNWD04xxCtN2cJsD7iPC3Rb00MmXo6J7m4mNc5on+h908SOPEXeVpXfOYjKCz8Lc77CFpt0re8fVqxPwMArwYSemp2UpzZPjejWE96ezwcfei9hxwaJ8OPyeDv110htDEqtMyUMpaf73D9BlZdPKgiL1nHpZbkKf5jSTNI+RvBfQn9Xie+MNUyG34YTkGua3MgSSc8Ecy4SGv04duaVUnvr71y+4lXQm6jrUfQ35jI5GbH+YnG+zOFhVyMyBaIeM198gQkI="
+  - secure: goa2CiPwuj8cNnQosFSldZ3V0XAMWib7cfEGLwyZJu9vOVuWck3JLOnbyugjqfXDamuo+Fdn6H5Jm/43qjvpWwX7tTEv487wJCnpNLDXhMa/QpoFV5nNFuq83e5MOii6ahGx8i54TSiCjRIMI2M/IH7HC3SoTObyEZ4sx+ELiwpnxNZhDAwbPNfiEi1vgARk+kap4DoV2nfzDyWfp1rj3JmTMzeZH9W4eEOS4mJHOOP1QiGA/40TaVWG/twUsGTew1WjNUuivHHcuLf7wzGGM+cMier3g22/j9f0qKKh6XYI4oWjigkNrwPHXAz2HuFqK1EGPwUu12TsNgb+LmJ3h6+//C2FoTJ5Evh+isMb3teVTix08QkzEIPbAUNKD4T8OOBgMnV0nawpatY/IJoiIz012c5fJoLZSWzw8oS1ifYoqQ9tlTLmRlic39bFmqLY1BsYgUqRERvaMoz4/z8OrSwuvlPlVgWHwi+xFCu/CyHBJWJHdegxrFEKeYxoxVaHCeRxsU+XV/9zsa5b61H+1RAL/V8sufbMmBJrIKAigrDhHxlXumm8ZECCrGMXQ9XP8P8KFEsO8Z9gfHswId0xo6XOEWRF2sbzXqXWqSwJwFsPzC2m7MsL/5+z8o0siofB3NWinDizpXK1KSHt1WEe1KY+jPkcTZxGPEd5p8HDWDo=
 cache:
   yarn: true
   directories:
-    - node_modules
+  - node_modules
 script:
-  - yarn lint
-  - yarn build
+- yarn lint
+- yarn build
 deploy:
-  # publish dev versions
-  - provider: script
-    repo: konnectors/bipandgo
-    skip-cleanup: true
-    script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
-    on:
-      branch: master
-  # publish on latest branch (will be removed when collect will use only the registry
-  - provider: script
-    repo: konnectors/bipandgo
-    skip-cleanup: true
-    script: DEPLOY_BRANCH=latest yarn deploy
-    on:
-      branch: prod
-  # publish stable versions and beta versions based on tags
-  - provider: script
-    repo: konnectors/bipandgo
-    skip-cleanup: true
-    script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
-    on:
-      tags: true
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
+  on:
+    branch: master
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=latest yarn deploy
+  on:
+    branch: prod
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
+  on:
+    tags: true
+before_install:
+- openssl aes-256-cbc -K $encrypted_c5859a3a95f8_key -iv $encrypted_c5859a3a95f8_iv
+  -in github_deploy_key.enc -out /tmp/github_deploy_key -d
