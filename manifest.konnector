@@ -8,7 +8,7 @@
   "source": "git://github.com/konnectors/bipandgo.git",
   "editor": "Cozy",
   "vendor_link": "https://www.bipandgo.com",
-  "categories": ["other"],
+  "categories": ["transport"],
   "fields": {
     "login": {
       "type": "text"
