@@ -86,5 +86,6 @@
       }
     }
   },
-  "banksTransactionRegExp": "\\bbipandgo\\b"
+  "banksTransactionRegExp": "\\bbipandgo\\b",
+  "manifest_version": "2"
 }
