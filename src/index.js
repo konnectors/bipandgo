@@ -34,7 +34,7 @@ async function start(fields) {
 }
 
 async function parsePage($) {
-  log('info', 'Scraping and prefetching bills')
+  log('info', 'Scraping and filter bills')
   let bills = scrape(
     $,
     {
