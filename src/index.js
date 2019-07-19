@@ -109,7 +109,8 @@ async function getPage(pageId) {
       'listbox_setPage:method': 'invoice_listbox'
     }
   })
-  if ($('a.pagination__next').hasClass('visually-hidden')) {
+  if ($('a.pagination__next').length === 0
+      || $('a.pagination__next').hasClass('visually-hidden')) {
     log('info', `Next page link not found, expecting no more page`)
     return { page: $, status: false }
   } else {
