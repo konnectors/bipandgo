@@ -3,7 +3,7 @@ node_js:
 - '12'
 env:
   global:
-  - DEPLOY_REPOSITORY="git@github.com:konnectors/bipandgo.git"
+  # REGISTRY_TOKEN(editor=cozy, app=bipandgo)
   - secure: goa2CiPwuj8cNnQosFSldZ3V0XAMWib7cfEGLwyZJu9vOVuWck3JLOnbyugjqfXDamuo+Fdn6H5Jm/43qjvpWwX7tTEv487wJCnpNLDXhMa/QpoFV5nNFuq83e5MOii6ahGx8i54TSiCjRIMI2M/IH7HC3SoTObyEZ4sx+ELiwpnxNZhDAwbPNfiEi1vgARk+kap4DoV2nfzDyWfp1rj3JmTMzeZH9W4eEOS4mJHOOP1QiGA/40TaVWG/twUsGTew1WjNUuivHHcuLf7wzGGM+cMier3g22/j9f0qKKh6XYI4oWjigkNrwPHXAz2HuFqK1EGPwUu12TsNgb+LmJ3h6+//C2FoTJ5Evh+isMb3teVTix08QkzEIPbAUNKD4T8OOBgMnV0nawpatY/IJoiIz012c5fJoLZSWzw8oS1ifYoqQ9tlTLmRlic39bFmqLY1BsYgUqRERvaMoz4/z8OrSwuvlPlVgWHwi+xFCu/CyHBJWJHdegxrFEKeYxoxVaHCeRxsU+XV/9zsa5b61H+1RAL/V8sufbMmBJrIKAigrDhHxlXumm8ZECCrGMXQ9XP8P8KFEsO8Z9gfHswId0xo6XOEWRF2sbzXqXWqSwJwFsPzC2m7MsL/5+z8o0siofB3NWinDizpXK1KSHt1WEe1KY+jPkcTZxGPEd5p8HDWDo=
 cache:
   yarn: true
@@ -16,7 +16,6 @@ branches:
 script:
 - yarn lint
 - yarn build
-- yarn run check
 deploy:
 - provider: script
   skip-cleanup: true
