@@ -1,26 +1,29 @@
 process.env.SENTRY_DSN =
   process.env.SENTRY_DSN ||
-  'https://fd8eff36bc174135b11022c87665aab5:de67cf86d0f742e4b00c351f82260d17@sentry.cozycloud.cc/41'
+  'https://9c471046a6b549168c6799a86506ef3b@errors.cozycloud.cc/52'
 
 const {
   BaseKonnector,
   requestFactory,
-  signin,
   scrape,
   saveBills,
   log,
-  errors
+  errors,
+  cozyClient,
+  solveCaptcha
 } = require('cozy-konnector-libs')
 const request = requestFactory({
   cheerio: true,
-  //  debug: true,
+  // debug: true,
   jar: true
 })
+const models = cozyClient.new.models
+const { Qualification } = models.document
 const moment = require('moment')
 moment.locale('fr')
 
 const baseUrl = 'https://www.bipandgo.com'
-const billsUrl = baseUrl + '/mon_compte/factures/site2017-mon_compte-factures'
+const billsUrl = baseUrl + '/mon_compte/factures'
 
 module.exports = new BaseKonnector(start)
 
@@ -29,7 +32,10 @@ async function start(fields) {
   const bills = await getBillsList()
   await saveBills(bills, fields, {
     identifiers: ['bipandgo'],
-    contentType: 'application/pdf'
+    contentType: 'application/pdf',
+    sourceAccount: this.accountId,
+    sourceAccountIdentifier: fields.login,
+    fileIdAttributes: ['vendorRef']
   })
 }
 
@@ -38,7 +44,7 @@ async function parsePage($) {
   let bills = scrape(
     $,
     {
-      billId: {
+      vendorRef: {
         sel: 'td:nth-child(1)'
       },
 
@@ -70,14 +76,24 @@ async function parsePage($) {
   return bills.map(bill => {
     const filename =
       `${bill['billDate'].format('YYYY-MM-DD')}` +
-      `_${bill['amountString']}_${bill['billId']}.pdf`
+      `_${bill['amountString']}_${bill['vendorRef']}.pdf`
     delete bill.billDate
     delete bill.amountString
     return {
       ...bill,
       vendor: 'bipandgo',
       currency: '€',
-      filename: filename
+      filename: filename,
+      fileAttributes: {
+        metadata: {
+          contentAuthor: 'bipandgo.com',
+          issueDate: new Date(),
+          datetime: new Date(bill.date),
+          datetimeLabel: `issueDate`,
+          carbonCopy: true,
+          qualification: Qualification.getByLabel('transport_invoice')
+        }
+      }
     }
   })
 }
@@ -95,51 +111,67 @@ async function filter(bills) {
   return billsNew
 }
 
-async function getPage(pageId) {
-  log('info', `Fetching page ${pageId}`)
-  const $ = await request({
-    method: 'POST',
-    url: `${billsUrl}`,
-    formData: {
-      invoice_listbox_page_start: `${pageId}`,
-      dialog_id: 'WebSection_viewInvoiceInformation',
-      'invoice_listbox_uid:list': '',
-      invoice_listbox_list_selection_name:
-        'WebSection_viewInvoiceInformation_invoice_listbox_selection',
-      'listbox_setPage:method': 'invoice_listbox'
-    }
-  })
-  if ($('a.pagination__next').hasClass('visually-hidden')) {
+async function getPage(listStartNumber, pageNumber) {
+  log('info', `Fetching page ${pageNumber}`)
+  const $ = await request(
+    `${billsUrl}/?invoice_listbox_list_start=${listStartNumber}`
+  )
+  if ($('a[rel="next"]').length > 0) {
+    log('debug', `Page ${pageNumber} found`)
+    return { page: $, status: true }
+  } else {
     log('info', `Next page link not found, expecting no more page`)
     return { page: $, status: false }
-  } else {
-    log('debug', `Page ${pageId} found`)
-    return { page: $, status: true }
   }
 }
 
 async function getBillsList() {
   let bills = []
   let again = true
-  let page = 1
+  let listStartNumber = 0
+  let pageNumber = 1
   while (again) {
-    const pageAndStatus = await getPage(page)
+    const pageAndStatus = await getPage(listStartNumber, pageNumber)
     again = pageAndStatus.status
     const partBill = await parsePage(pageAndStatus.page)
     bills = bills.concat(partBill)
-    page = page + 1
+    // On each page, there is 15 bills available so the startNumber in the url is implemented by 15 each lap.
+    listStartNumber = listStartNumber + 15
+    pageNumber = pageNumber + 1
   }
   return bills
 }
 
 async function login(fields) {
   log('info', 'Logging...')
-  await signin({
-    url: `${baseUrl}/login_form`,
-    formSelector: '.main_form',
-    formData: {
-      __ac_name: fields.login,
-      __ac_password: fields.password
+  const loginPage = await request(`${baseUrl}/login_form`)
+  const loginValues = await parseLoginPage(loginPage)
+  const gRecaptcha = await solveCaptcha({
+    websiteKey: '6Lc1dyMUAAAAAASglHuUf-6pMMFKMgCt8ASs9ck1',
+    websiteURL: 'https://www.bipandgo.com/login_form'
+  })
+  await request('https://www.bipandgo.com/volatile_cache_context/', {
+    method: 'POST',
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0',
+      Accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Upgrade-Insecure-Requests': '1',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'same-origin'
+    },
+    form: {
+      'g-recaptcha-response': gRecaptcha,
+      username: fields.login,
+      password: fields.password,
+      login_retry_url: loginValues[0].fieldLoginRetryUrl,
+      came_from: loginValues[0].fieldCameFrom,
+      __enable_authorisation_extractor: '1',
+      'logged_in_once:method': 'Go'
     }
   })
   // Make a check, because resp to signin is identical(except SERVERID cookie)
@@ -147,4 +179,23 @@ async function login(fields) {
     if (err.statusCode === 401) throw new Error(errors.LOGIN_FAILED)
     else throw err
   })
+}
+
+async function parseLoginPage($) {
+  let loginValue = scrape(
+    $,
+    {
+      fieldLoginRetryUrl: {
+        sel: 'input[name="field_login_retry_url"]',
+        attr: 'value'
+      },
+
+      fieldCameFrom: {
+        sel: 'input[name="field_came_from"]',
+        attr: 'value'
+      }
+    },
+    '.auxiliary'
+  )
+  return loginValue
 }
